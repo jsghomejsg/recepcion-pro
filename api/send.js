@@ -9,7 +9,7 @@ export default async function handler(req, res) {
         const apiKeyResend = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
         const emailTaller = "jsghomejsg@gmail.com";
 
-        // 1. CORREO DE CONTROL PARA EL TALLER (Te llega siempre a ti)
+        // 1. CORREO PARA EL TALLER (Te llega a ti como dueño)
         const respuestaTaller = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -23,7 +23,10 @@ export default async function handler(req, res) {
                 html: `
                     <h2>Nueva Orden de Trabajo Registrada</h2>
                     <p><strong>Cliente:</strong> ${nombre}</p>
+                    <p><strong>Teléfono:</strong> ${telefono}</p>
                     <p><strong>Matrícula:</strong> ${matricula.toUpperCase()}</p>
+                    <p><strong>Email del cliente para enviar:</strong> ${emailCliente || 'No indicado'}</p>
+                    <br>
                     <p>El PDF oficial firmado se adjunta en este correo de forma segura.</p>
                 `,
                 attachments: [{
@@ -33,7 +36,7 @@ export default async function handler(req, res) {
             })
         });
 
-        // 2. CORREO REAL PARA EL CLIENTE (El correo de tu mujer)
+        // 2. CORREO SIMULADO PARA EL CLIENTE (Te llega a ti también para esquivar el bloqueo gratis)
         if (emailCliente && emailCliente.trim() !== "") {
             await fetch('https://api.resend.com/emails', {
                 method: 'POST',
@@ -43,13 +46,14 @@ export default async function handler(req, res) {
                 },
                 body: JSON.stringify({
                     from: 'RecepcionPro <onboarding@resend.dev>',
-                    to: [emailCliente.trim()], // ¡Aquí se envía a su correo real!
-                    subject: `📄 Copia de su Orden de Recepción - ${matricula.toUpperCase()}`,
+                    to: [emailTaller], 
+                    subject: `📄 [SIMULACIÓN CLIENTE] Copia destinada a: ${emailCliente}`,
                     html: `
                         <h2>Resguardo de Recepción de Vehículo</h2>
                         <p>Estimado/a <strong>${nombre}</strong>,</p>
                         <p>Le informamos que su vehículo con matrícula <strong>${matricula.toUpperCase()}</strong> ha sido registrado correctamente en nuestras instalaciones.</p>
-                        <p>Adjunto encontrará el documento PDF oficial firmado con el estado de recepción.</p>
+                        <p><strong>Trabajos solicitados:</strong> ${trabajos || 'Revisión General'}</p>
+                        <p>Adjunto a este correo encontrará el documento PDF oficial firmado con el estado visual y la conformidad legal.</p>
                         <br>
                         <p><em>Gracias por confiar en nuestro taller.</em></p>
                     `,

@@ -10,8 +10,8 @@ export default async function handler(req, res) {
         // ==========================================
         // 🔑 CONFIGURACIÓN DE TU PRIMER TALLER
         // ==========================================
-        const RESEND_API_KEY = "re_TuLlaveSecretaDeResendAquí"; // Reemplaza esto por tu clave de Resend.com
-        const EMAIL_TALLER = "correo-del-dueño-del-taller@gmail.com"; // El correo donde el mecánico recibe las copias
+        const RESEND_API_KEY = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE"; // Reemplaza esto por tu clave de Resend.com
+        const EMAIL_TALLER = "juliosangu3@gmail.com"; // El correo donde el mecánico recibe las copias
         // ==========================================
 
         // Preparamos la lista de destinatarios (Al taller siempre, al cliente solo si tiene email)

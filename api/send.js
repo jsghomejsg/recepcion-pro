@@ -4,11 +4,18 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { matricula, nombre, telefono, trabajos, pdfBase64 } = req.body;
+        const { matricula, nombre, telefono, emailCliente, trabajos, pdfBase64 } = req.body;
 
-        // Configuración directa y segura sin librerías externas
         const apiKeyResend = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
-        const emailDestino = "jsghomejsg@gmail.com";
+        const emailTaller = "jsghomejsg@gmail.com";
+
+        // Preparamos la lista de destinatarios. El taller va SIEMPRE.
+        const listaDestinatarios = [emailTaller];
+
+        // Si el cliente tiene un email válido rellenado, lo sumamos a la lista
+        if (emailCliente && emailCliente.trim() !== "") {
+            listaDestinatarios.push(emailCliente.trim());
+        }
 
         const respuestaResend = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -18,14 +25,17 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify({
                 from: 'RecepcionPro <onboarding@resend.dev>',
-                to: [emailDestino],
-                subject: `🚨 NUEVA RECEPCIÓN: ${matricula.toUpperCase()}`,
+                to: listaDestinatarios,
+                subject: `🚨 ORDEN DE RECEPCIÓN: ${matricula.toUpperCase()}`,
                 html: `
-                    <h2>Nueva Orden de Trabajo Registrada</h2>
-                    <p><strong>Cliente:</strong> ${nombre}</p>
-                    <p><strong>Teléfono:</strong> ${telefono}</p>
-                    <p><strong>Matrícula:</strong> ${matricula.toUpperCase()}</p>
-                    <p>El PDF oficial firmado se adjunta en este correo de forma segura.</p>
+                    <h2>Resguardo de Recepción de Vehículo</h2>
+                    <p>Hola <strong>${nombre}</strong>,</p>
+                    <p>Se ha registrado correctamente la entrada de su vehículo con matrícula <strong>${matricula.toUpperCase()}</strong> en nuestras instalaciones.</p>
+                    <p><strong>Teléfono de contacto:</strong> ${telefono}</p>
+                    <p><strong>Trabajos solicitados:</strong> ${trabajos || 'Revisión General'}</p>
+                    <p>Adjunto a este correo encontrará el documento PDF firmado con el estado de recepción de su vehículo.</p>
+                    <br>
+                    <p><em>Gracias por confiar en nuestro taller.</em></p>
                 `,
                 attachments: [{
                     filename: `ORDEN_${matricula.toUpperCase()}.pdf`,

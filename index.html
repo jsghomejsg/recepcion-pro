@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TALLER - Recepción Digital</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        canvas { touch-action: none; }
+        input[type="file"], .opcion-check { display: none; }
+        .opcion-tarjeta:has(input:checked) {
+            border-color: #3b82f6;
+            background-color: #1e3a8a;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-200 font-sans antialiased">
+
+    <div class="max-w-md mx-auto p-4 min-h-screen flex flex-col justify-between">
+        
+        <header class="p-3 text-center flex flex-col items-center">
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">RECEPCIÓN PREMIUM</h1>
+            <div class="inline-flex items-center bg-emerald-950 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-wider border border-emerald-900">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Recepción Digital de Vehículos
+            </div>
+
+            <button id="btn_instalar" class="mt-3 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-2 px-4 rounded-xl text-xs transition active:scale-95 shadow-md">
+                <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Instalar App en el Móvil
+            </button>
+        </header>
+
+        <main class="mt-2 space-y-4 flex-grow">
+            
+            <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">1. Datos del Vehículo y Cliente</h2>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Matrícula</label>
+                        <input type="text" id="matricula" placeholder="1234XYZ" class="w-full uppercase p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-lg font-bold tracking-wider placeholder-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1">Kilómetros</label>
+                        <input type="number" id="kilometros" placeholder="150000" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-lg font-bold tracking-wider placeholder-gray-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Nombre del Cliente</label>
+                    <input type="text" id="nombre" placeholder="Manuel García" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Teléfono</label>
+                    <input type="tel" id="telefono" placeholder="600123456" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-medium text-gray-400">Correo Electrónico</label>
+                        <label class="inline-flex items-center text-xs text-gray-500">
+                            <input type="checkbox" id="no_email" class="rounded bg-gray-800 border-gray-700 text-blue-600 focus:ring-blue-500 mr-1"> No tiene email
+                        </label>
+                    </div>
+                    <input type="email" id="email" placeholder="email@cliente.com" class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-600">
+                </div>
+            </div>
+
+            <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">2. Trabajo a Realizar (Toca para seleccionar)</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Mantenimiento (Aceite y Filtros)"> Mantenimiento (Aceite y Filtros)
+                    </label>
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Frenos"> Frenos
+                    </label>
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Neumáticos"> Neumáticos
+                    </label>
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Fallo Motor"> Fallo Motor / Ruido
+                    </label>
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Electricidad"> Electricidad
+                    </label>
+                    <label class="opcion-tarjeta flex items-center justify-center p-3 bg-gray-800 border border-gray-700 rounded-xl text-xs font-medium text-gray-300 cursor-pointer transition select-none active:scale-95 text-center h-12">
+                        <input type="checkbox" class="opcion-check" value="Chapa y Pintura"> Chapa y Pintura
+                    </label>
+                </div>
+                <textarea id="notas_trabajo" rows="2" placeholder="Notas adicionales..." class="w-full p-3 bg-gray-800 text-white border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-600 text-sm"></textarea>
+            </div>
+
+            <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
+                <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">3. Estado Visual del Vehículo</h2>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex flex-col items-center justify-center h-24 bg-gray-800 rounded-xl border border-dashed border-gray-700 cursor-pointer hover:border-blue-500 transition" id="lbl_foto1">
+                        <span class="text-[10px] text-gray-400">Esquina Del. Izq.</span>
+                        <input type="file" id="foto1" accept="image/*" capture="camera" onchange="procesarFoto(this, 'lbl_foto1')">
+                    </label>
+                    <label class="flex flex-col items-center justify-center h-24 bg-gray-800 rounded-xl border border-dashed border-gray-700 cursor-pointer hover:border-blue-500 transition" id="lbl_foto2">
+                        <span class="text-[10px] text-gray-400">Esquina Del. Der.</span>
+                        <input type="file" id="foto2" accept="image/*" capture="camera" onchange="procesarFoto(this, 'lbl_foto2')">
+                    </label>
+                    <label class="flex flex-col items-center justify-center h-24 bg-gray-800 rounded-xl border border-dashed border-gray-700 cursor-pointer hover:border-blue-500 transition" id="lbl_foto3">
+                        <span class="text-[10px] text-gray-400">Esquina Tras. Izq.</span>
+                        <input type="file" id="foto3" accept="image/*" capture="camera" onchange="procesarFoto(this, 'lbl_foto3')">
+                    </label>
+                    <label class="flex flex-col items-center justify-center h-24 bg-gray-800 rounded-xl border border-dashed border-gray-700 cursor-pointer hover:border-blue-500 transition" id="lbl_foto4">
+                        <span class="text-[10px] text-gray-400">Esquina Tras. Der.</span>
+                        <input type="file" id="foto4" accept="image/*" capture="camera" onchange="procesarFoto(this, 'lbl_foto4')">
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">4. Conformidad (Firma en pantalla)</h2>
+                    <button type="button" id="btn_limpiar" class="text-[10px] bg-gray-800 border border-gray-700 text-gray-400 py-1 px-2 rounded-lg">Borrar</button>
+                </div>
+                <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
+                    <canvas id="canvas_firma" class="w-full h-32 bg-gray-950 block" width="350" height="128"></canvas>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="mt-5 mb-2">
+            <button id="btn_enviar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg transition active:scale-95 text-lg flex items-center justify-center">
+                Finalizar y Guardar Registro
+            </button>
+        </footer>
+
+    </div>
+
+    <script>
+        // Guardar las fotos comprimidas en memoria
+        const fotosAlmacenadas = {};
+
+        // LÓGICA INSTALACIÓN EN ESCRITORIO (PWA)
+        let eventoInstalacion;
+        const btnInstalar = document.getElementById('btn_instalar');
+
+        // Escuchar si el navegador permite la instalación nativa (Android/Chrome)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            eventoInstalacion = e;
+        });
+
+        btnInstalar.addEventListener('click', async () => {
+            if (eventoInstalacion) {
+                // Ejecutar instalador nativo en Android
+                eventoInstalacion.prompt();
+                const { outcome } = await eventoInstalacion.userChoice;
+                if (outcome === 'accepted') {
+                    btnInstalar.style.display = 'none';
+                }
+                eventoInstalacion = null;
+            } else {
+                // Guía rápida e inteligente para iPhone / Safari o si ya está instalada
+                alert('📱 Para tenerla como App:\n\n• En Android/Chrome: Ya la tienes instalada o dale a los 3 puntitos arriba y "Instalar aplicación".\n• En iPhone/Safari: Dale al botón "Compartir" abajo y selecciona "Añadir a la pantalla de inicio".');
+            }
+        });
+
+        // 1. GESTIÓN DE LA FIRMA CON EL DEDO
+        const canvas = document.getElementById('canvas_firma');
+        const ctx = canvas.getContext('2d');
+        let trazando = false;
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+
+        function obtenerPosicion(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clienteX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clienteY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clienteX - rect.left, y: clienteY - rect.top };
+        }
+
+        function iniciarTrazo(e) { trazando = true; dejasMarca(e); }
+        function finTrazo() { trazando = false; ctx.beginPath(); }
+
+        function dejasMarca(e) {
+            if (!trazando) return;
+            const pos = obtenerPosicion(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        canvas.addEventListener('mousedown', iniciarTrazo);
+        canvas.addEventListener('mousemove', dejasMarca);
+        canvas.addEventListener('mouseup', finTrazo);
+        canvas.addEventListener('touchstart', iniciarTrazo);
+        canvas.addEventListener('touchmove', dejasMarca);
+        canvas.addEventListener('touchend', finTrazo);
+
+        document.getElementById('btn_limpiar').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        // 2. COMPRESIÓN DE FOTOS AL INSTANTE
+        function procesarFoto(input, idLabel) {
+            const archivo = input.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvasComp = document.createElement('canvas');
+                    const maxDim = 800;
+                    let ancho = img.width;
+                    let alto = img.height;
+
+                    if (ancho > alto && ancho > maxDim) { alto *= maxDim / ancho; ancho = maxDim; }
+                    else if (alto > maxDim) { ancho *= maxDim / alto; alto = maxDim; }
+
+                    canvasComp.width = ancho;
+                    canvasComp.height = alto;
+                    const ctxComp = canvasComp.getContext('2d');
+                    ctxComp.drawImage(img, 0, 0, ancho, alto);
+
+                    fotosAlmacenadas[input.id] = canvasComp.toDataURL('image/jpeg', 0.6);
+                    
+                    document.getElementById(idLabel).classList.remove('bg-gray-800', 'border-gray-700');
+                    document.getElementById(idLabel).classList.add('bg-emerald-950', 'border-emerald-500', 'text-emerald-400');
+                };
+                img.src = e.target.result;
+            };
+            lector.readAsDataURL(archivo);
+        }
+
+        // CONTROL CHECKBOX EMAIL
+        document.getElementById('no_email').addEventListener('change', function() {
+            const inputEmail = document.getElementById('email');
+            if(this.checked) {
+                inputEmail.value = "";
+                inputEmail.disabled = true;
+                inputEmail.classList.add('opacity-30');
+            } else {
+                inputEmail.disabled = false;
+                inputEmail.classList.remove('opacity-30');
+            }
+        });
+
+        // 3. GENERACIÓN DEL PDF Y ENVÍO AUTOMÁTICO
+        document.getElementById('btn_enviar').addEventListener('click', async () => {
+            const btn = document.getElementById('btn_enviar');
+            const matricula = document.getElementById('matricula').value.trim();
+            const nombre = document.getElementById('nombre').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+
+            if (!matricula || !nombre || !telefono) {
+                alert('⚠️ Por favor, rellena los campos obligatorios: Matrícula, Nombre y Teléfono.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "⏳ Guardando y Enviando...";
+
+            const trabajos = [];
+            document.querySelectorAll('.opcion-check:checked').forEach(cb => trabajos.push(cb.value));
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(20);
+            doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 28);
+
+            doc.setFillColor(240, 240, 240);
+            doc.rect(20, 35, 170, 35, "F");
+            doc.setFont("helvetica", "bold");
+            doc.text("DATOS GENERALES:", 25, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Matrícula: ${matricula.toUpperCase()}`, 25, 50);
+            doc.text(`Kilómetros: ${document.getElementById('kilometros').value || 'No indicados'} km`, 25, 56);
+            doc.text(`Cliente: ${nombre} | Tel: ${telefono}`, 25, 62);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("TRABAJOS SOLICITADOS:", 20, 80);
+            doc.setFont("helvetica", "normal");
+            doc.text(trabajos.length > 0 ? trabajos.join(', ') : 'Ninguno seleccionado', 20, 86);
+            doc.text(`Notas: ${document.getElementById('notas_trabajo').value || 'Sin notas adicionales.'}`, 20, 94);
+
+            let ejeY = 110;
+            doc.setFont("helvetica", "bold");
+            doc.text("REGISTRO FOTOGRÁFICO DE ESTADO VISUAL:", 20, ejeY);
+            ejeY += 6;
+
+            if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY, 35, 25);
+            if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 60, ejeY, 35, 25);
+            if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 100, ejeY, 35, 25);
+            if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 140, ejeY, 35, 25);
+            
+            ejeY += 35;
+            doc.setFont("helvetica", "bold");
+            doc.text("CONFORMIDAD Y RECONOCIMIENTO DE ESTADO (FIRMA):", 20, ejeY);
+            
+            const imgFirma = canvas.toDataURL('image/png');
+            doc.addImage(imgFirma, 'PNG', 20, ejeY + 4, 50, 20);
+
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+            try {
+                const respuesta = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        matricula,
+                        kilometros: document.getElementById('kilometros').value,
+                        nombre,
+                        telefono,
+                        email: document.getElementById('email').value,
+                        trabajos: trabajos.join(', '),
+                        notes: document.getElementById('notas_trabajo').value,
+                        pdfBase64
+                    })
+                });
+
+                const resultado = await respuesta.json();
+
+                if (resultado.success) {
+                    alert('✅ ¡Orden guardada y correos enviados correctamente!');
+                    location.reload();
+                } else {
+                    alert('❌ Error al enviar correos: ' + resultado.error);
+                    btn.disabled = false;
+                    btn.innerText = "Finalizar y Guardar Registro";
+                }
+            } catch (err) {
+                alert('❌ Error de conexión con el servidor.');
+                btn.disabled = false;
+                btn.innerText = "Finalizar y Guardar Registro";
+            }
+        });
+    </script>
+</body>
+</html>

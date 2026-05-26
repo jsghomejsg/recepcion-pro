@@ -3,58 +3,69 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Método no permitido' });
     }
 
-    // 🎛️ TU PANEL DE CONTROL REAL (Aquí tienes la llave de paso de tus clientes)
+    // 🎛️ TU PANEL DE CONTROL TOTAL:
+    // Aquí controlas quién paga. Si un taller te debe dinero, cambias su 'activo' a false y la app se le bloquea.
     const TALLERES_AUTORIZADOS = {
+        "demo": { 
+            nombre: "RECEPCIÓN PREMIUM (DEMO)", 
+            emailAvisoTaller: "jsghomejsg@gmail.com", 
+            activo: true 
+        },
         "julio": { 
             nombre: "TALLERES JULIO", 
-            email: "juliosangu3@gmail.com", // 🎯 El correo de tu primer cliente real
-            activo: true                    // 🟢 TRUE significa que paga y está activo. Si pones FALSE, se le corta el grifo
+            emailAvisoTaller: "juliosangu3@gmail.com", // Al taller le llega su copia aquí
+            activo: true                               // 🟢 ACTIVO. Si pones false, se apaga su app.
+        },
+        "pepe": { 
+            nombre: "TALLERES PEPE", 
+            emailAvisoTaller: "jsghomejsg@gmail.com", 
+            activo: true 
         }
     };
 
     try {
         const { matricula, nombre, telefono, emailCliente, trabajos, pdfBase64, idTaller } = req.body;
 
-        // Buscamos si el taller que usa la app está dado de alta en tu lista anterior
-        const taller = TALLERES_AUTORIZADOS[idTaller || "julio"];
+        // Validamos si el taller que está usando la app existe y paga
+        const taller = TALLERES_AUTORIZADOS[idTaller || "demo"];
         
-        // Si no existe o has puesto "activo: false", la aplicación se bloquea sola
         if (!taller || !taller.activo) {
-            return res.status(403).json({ success: false, error: "Licencia caducada. Contacte con el administrador." });
+            return res.status(403).json({ success: false, error: "Licencia caducada o no activa. Contacte con el administrador." });
         }
 
         const apiKeyResend = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
 
-        // 1. CORREO DE AVISO PARA EL TALLER (Le llega a juliosangu3@gmail.com)
+        // 1. CORREO PARA EL TALLER (Aviso interno con el PDF firmado)
         await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${apiKeyResend}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 from: 'RecepcionPro <onboarding@resend.dev>',
-                to: [taller.email],
+                to: [taller.emailAvisoTaller],
                 subject: `🚨 [${taller.nombre}] NUEVA RECEPCIÓN: ${matricula.toUpperCase()}`,
                 html: `
-                    <h2>Nueva Orden de Trabajo Registrada</h2>
-                    <p><strong>Taller:</strong> ${taller.nombre}</p>
+                    <h2>Nueva Orden de Trabajo Registrada - ${taller.nombre}</h2>
                     <p><strong>Cliente:</strong> ${nombre}</p>
                     <p><strong>Teléfono:</strong> ${telefono}</p>
                     <p><strong>Matrícula:</strong> ${matricula.toUpperCase()}</p>
+                    <p><strong>Trabajos:</strong> ${trabajos || 'Revisión General'}</p>
                     <br>
-                    <p>El PDF oficial firmado por el cliente se encuentra adjunto.</p>
+                    <p>El PDF oficial firmado se adjunta en este correo de forma segura.</p>
                 `,
                 attachments: [{ filename: `ORDEN_${matricula.toUpperCase()}.pdf`, content: pdfBase64 }]
             })
         });
 
-        // 2. CORREO REAL PARA EL CLIENTE DEL TALLER (El correo que apunte el mecánico en la pantalla)
+        // 2. CORREO REAL DE CARA AL CLIENTE (El que meta el comercial/mecánico en la pantalla)
+        // Usamos el remitente autorizado de Resend para saltarnos el candado, pero el cliente verá el nombre del taller
         if (emailCliente && emailCliente.trim() !== "") {
             await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${apiKeyResend}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    from: 'RecepcionPro <onboarding@resend.dev>',
-                    to: [emailCliente.trim()], // Viaja directo a la bandeja del cliente final
-                    subject: `📄 Copia de su Orden de Recepción - ${taller.nombre}`,
+                    from: `${taller.nombre} <onboarding@resend.dev>`, // 🎯 Aquí se personaliza el nombre que ve el cliente
+                    to: [emailCliente.trim()], // 🚀 Viaja directo a la bandeja de entrada real del cliente
+                    subject: `📄 Su Resguardo de Recepción - ${taller.nombre}`,
                     html: `
                         <h2>Resguardo de Recepción de Vehículo</h2>
                         <p>Estimado/a <strong>${nombre}</strong>,</p>

@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 // IMPORTANTE: Tu clave de Resend se mantiene intacta
 const RESEND_API_KEY = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
 // Tu correo verificado en Resend (donde recibirás TODO en la demo)
-const EMAIL_TALLER = "tu-correo-de-github@gmail.com"; // <-- ASEGÚRATE DE QUE AQUÍ ESTÁ TU CORREO DE GITHUB
+const EMAIL_TALLER = "jsgjhomejsg@gmail.com"; // <-- ASEGÚRATE DE QUE AQUÍ ESTÁ TU CORREO DE GITHUB
 
 const resend = new Resend(RESEND_API_KEY);
 

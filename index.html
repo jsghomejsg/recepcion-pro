@@ -25,6 +25,10 @@
             <div class="inline-flex items-center bg-emerald-950 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-wider border border-emerald-900">
                 Recepción Digital de Vehículos
             </div>
+            <button id="btn_instalar" class="mt-3 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-2 px-4 rounded-xl text-xs transition active:scale-95 shadow-md">
+                <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Instalar App en el Móvil
+            </button>
         </header>
 
         <main class="mt-2 space-y-4 flex-grow">
@@ -134,6 +138,24 @@
         const fotosAlmacenadas = {};
         const apiKeyResend = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
         const emailDestino = "jsghomejsg@gmail.com";
+        let eventoInstalacion;
+
+        // CONTROL BOTÓN INSTALAR
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            eventoInstalacion = e;
+        });
+
+        document.getElementById('btn_instalar').addEventListener('click', async () => {
+            if (eventoInstalacion) {
+                eventoInstalacion.prompt();
+                const { outcome } = await eventoInstalacion.userChoice;
+                if (outcome === 'accepted') document.getElementById('btn_instalar').style.display = 'none';
+                eventoInstalacion = null;
+            } else {
+                alert('📱 Para guardar esta App en el dispositivo:\n\n• En Android/PC: Dale a los tres puntos del navegador y busca "Instalar aplicación" o "Añadir a pantalla de inicio".\n• En iPhone (Safari): Dale al botón de "Compartir" abajo en el centro y selecciona "Añadir a la pantalla de inicio".');
+            }
+        });
 
         // GESTIÓN DE FIRMA
         const canvas = document.getElementById('canvas_firma');
@@ -164,7 +186,7 @@
             if(this.checked) inputEmail.value = "";
         });
 
-        // PROCESAR FOTOS (COMPRESIÓN BÁSICA)
+        // PROCESAR FOTOS
         function procesarFoto(input, idLabel) {
             const archivo = input.files[0];
             if (!archivo) return;
@@ -180,6 +202,7 @@
                     canvasComp.width = w; canvasComp.height = h;
                     canvasComp.getContext('2d').drawImage(img, 0, 0, w, h);
                     fotosAlmacenadas[input.id] = canvasComp.toDataURL('image/jpeg', 0.5);
+                    document.getElementById(idLabel).classList.remove('bg-gray-800', 'border-gray-700');
                     document.getElementById(idLabel).classList.add('bg-emerald-950', 'text-emerald-400', 'border-emerald-500');
                 };
                 img.src = e.target.result;
@@ -205,7 +228,6 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // PDF Estilo
             doc.setFontSize(18);
             doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
             doc.setFontSize(10);
@@ -217,7 +239,6 @@
             document.querySelectorAll('.opcion-check:checked').forEach(c => seleccionados.push(c.value));
             doc.text(`Trabajos: ${seleccionados.join(', ') || 'General'}`, 20, 58);
 
-            // Reportaje fotográfico en PDF
             let ejeY = 70;
             doc.text("Reportaje Fotográfico:", 20, ejeY);
             if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY+5, 40, 30);
@@ -225,7 +246,6 @@
             if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 110, ejeY+5, 40, 30);
             if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 155, ejeY+5, 40, 30);
 
-            // Firma y LOPD
             doc.setFontSize(7);
             const lopd = "El cliente autoriza los trabajos y pruebas en carretera. Datos tratados según RGPD.";
             doc.text(lopd, 20, 115);

@@ -135,15 +135,13 @@
     </div>
 
     <script>
-        // DETECTAR EL TALLER DESDE EL ENLACE URL (?taller=pepe)
         const parametrosURL = new URLSearchParams(window.location.search);
         const idTallerActual = parametrosURL.get('taller') || 'demo';
 
-        // Nombres estéticos provisionales para la pantalla del comercial
         const nombresTalleres = {
             'demo': 'RECEPCIÓN PREMIUM',
-            'pepe': 'TALLERES PEPE',
-            'cordoba': 'AUTOMOCIÓN CÓRDOBA'
+            'julio': 'TALLERES JULIO',
+            'pepe': 'TALLERES PEPE'
         };
         if (nombresTalleres[idTallerActual]) {
             document.getElementById('nombre_taller_pantalla').innerText = nombresTalleres[idTallerActual];
@@ -242,7 +240,7 @@
                         emailCliente: noEmail ? "" : emailCliente, 
                         trabajos: seleccionados.join(', '), 
                         pdfBase64,
-                        idTaller: idTallerActual // Enviamos el identificador del taller al servidor
+                        idTaller: idTallerActual
                     })
                 });
 

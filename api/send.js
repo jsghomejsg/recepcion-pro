@@ -1,16 +1,14 @@
 import { Resend } from 'resend';
 
 // CONFIGURACIÓN INICIAL
-// IMPORTANTE: Tu clave de Resend se mantiene intacta
 const RESEND_API_KEY = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
-// Tu correo verificado en Resend (donde recibirás TODO en la demo)
-const EMAIL_TALLER = "jsghomejsg@gmail.com"; // <-- ASEGÚRATE DE QUE AQUÍ ESTÁ TU CORREO DE GITHUB
+const EMAIL_TALLER = "jsghomejsg@gmail.com"; 
 
 const resend = new Resend(RESEND_API_KEY);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(450).json({ error: 'Método no permitido' });
+        return res.status(405).json({ error: 'Método no permitido' });
     }
 
     try {
@@ -40,12 +38,10 @@ export default async function handler(req, res) {
             ],
         });
 
-        // 2. CORREO PARA EL CLIENTE
-        // Como Resend gratis no deja enviar a emails externos, en la demo te lo mandamos 
-        // también a ti para que puedas ver el formato exacto que le llegaría al cliente.
+        // 2. CORREO PARA EL CLIENTE (Redirigido a ti para la demo)
         const correoCliente = await resend.emails.send({
             from: 'RecepcionPro <onboarding@resend.dev>',
-            to: [EMAIL_TALLER], // Redirigido a ti para saltar el bloqueo de la cuenta gratis
+            to: [EMAIL_TALLER],
             subject: `📄 Copia de su Orden de Recepción - Matrícula ${matricula.toUpperCase()}`,
             html: `
                 <p>Estimado/a <strong>${nombre}</strong>,</p>

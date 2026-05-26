@@ -25,9 +25,6 @@
             <div class="inline-flex items-center bg-emerald-950 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-wider border border-emerald-900">
                 Recepción Digital de Vehículos
             </div>
-            <div id="alerta_sincro" class="hidden w-full bg-amber-950 border border-amber-800 text-amber-400 text-[11px] p-2 rounded-xl mt-3 text-center font-medium animate-pulse">
-                ⏳ Tienes recepciones guardadas sin cobertura. Sincronizando...
-            </div>
             <button id="btn_instalar" class="mt-3 flex items-center justify-center bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 font-bold py-2 px-4 rounded-xl text-xs transition active:scale-95 shadow-md">
                 <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 Instalar App en el Móvil
@@ -139,45 +136,20 @@
 
     <script>
         const fotosAlmacenadas = {};
-        const apiKeyResend = "re_Sqrbgowq_3YSScdKZD34ZpwNKHzsU1ooE";
-        const emailDestino = "jsghomejsg@gmail.com";
         let eventoInstalacion;
 
-        // VERIFICAR AL INICIAR SI HAY COSAS GUARDADAS SIN INTERNET
-        window.addEventListener('load', () => {
-            intentarSincronizarPendientes();
-        });
-
         // CONTROL BOTÓN INSTALAR
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            eventoInstalacion = e;
-        });
-
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); eventoInstalacion = e; });
         document.getElementById('btn_instalar').addEventListener('click', async () => {
-            if (eventoInstalacion) {
-                eventoInstalacion.prompt();
-                const { outcome } = await eventoInstalacion.userChoice;
-                if (outcome === 'accepted') document.getElementById('btn_instalar').style.display = 'none';
-                eventoInstalacion = null;
-            } else {
-                alert('📱 Para guardar esta App en el dispositivo:\n\n• En Android/PC: Dale a los tres puntos del navegador y busca "Instalar aplicación".\n• En iPhone (Safari): Dale al botón de "Compartir" abajo en el centro y selecciona "Añadir a la pantalla de inicio".');
-            }
+            if (eventoInstalacion) { eventoInstalacion.prompt(); eventoInstalacion = null; }
+            else { alert('📱 Guarda la App:\n• En Android/PC: Tres puntos -> "Instalar".\n• En iPhone: Compartir -> "Añadir a pantalla de inicio".'); }
         });
 
         // GESTIÓN DE FIRMA
         const canvas = document.getElementById('canvas_firma');
         const ctx = canvas.getContext('2d');
-        let trazando = false;
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-
-        function obtenerPosicion(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clienteX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clienteY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clienteX - rect.left, y: clienteY - rect.top };
-        }
+        let trazando = false; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2;
+        function obtenerPosicion(e) { const r = canvas.getBoundingClientRect(); const cX = e.touches ? e.touches[0].clientX : e.clientX; const cY = e.touches ? e.touches[0].clientY : e.clientY; return { x: cX - r.left, y: cY - r.top }; }
         canvas.addEventListener('mousedown', (e) => { trazando = true; ctx.beginPath(); const p = obtenerPosicion(e); ctx.moveTo(p.x, p.y); });
         canvas.addEventListener('mousemove', (e) => { if(!trazando) return; const p = obtenerPosicion(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
         canvas.addEventListener('mouseup', () => trazando = false);
@@ -186,152 +158,73 @@
         canvas.addEventListener('touchend', () => trazando = false);
         document.getElementById('btn_limpiar').addEventListener('click', () => ctx.clearRect(0, 0, canvas.width, canvas.height));
 
-        // CHECKBOX NO EMAIL
         document.getElementById('no_email').addEventListener('change', function() {
-            const inputEmail = document.getElementById('email');
-            inputEmail.disabled = this.checked;
-            inputEmail.style.opacity = this.checked ? "0.3" : "1";
-            if(this.checked) inputEmail.value = "";
+            const inputEmail = document.getElementById('email'); inputEmail.disabled = this.checked; inputEmail.style.opacity = this.checked ? "0.3" : "1"; if(this.checked) inputEmail.value = "";
         });
 
-        // PROCESAR FOTOS
         function procesarFoto(input, idLabel) {
-            const archivo = input.files[0];
-            if (!archivo) return;
+            const archivo = input.files[0]; if (!archivo) return;
             const lector = new FileReader();
             lector.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    const canvasComp = document.createElement('canvas');
-                    const maxDim = 600;
-                    let w = img.width, h = img.height;
-                    if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
-                    else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-                    canvasComp.width = w; canvasComp.height = h;
-                    canvasComp.getContext('2d').drawImage(img, 0, 0, w, h);
+                    const canvasComp = document.createElement('canvas'); const maxDim = 600; let w = img.width, h = img.height;
+                    if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; } else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+                    canvasComp.width = w; canvasComp.height = h; canvasComp.getContext('2d').drawImage(img, 0, 0, w, h);
                     fotosAlmacenadas[input.id] = canvasComp.toDataURL('image/jpeg', 0.5);
-                    document.getElementById(idLabel).classList.remove('bg-gray-800', 'border-gray-700');
-                    document.getElementById(idLabel).classList.add('bg-emerald-950', 'text-emerald-400', 'border-emerald-500');
-                };
-                img.src = e.target.result;
-            };
-            lector.readAsDataURL(archivo);
+                    document.getElementById(idLabel).classList.remove('bg-gray-800', 'border-gray-700'); document.getElementById(idLabel).classList.add('bg-emerald-950', 'text-emerald-400', 'border-emerald-500');
+                }; img.src = e.target.result;
+            }; lector.readAsDataURL(archivo);
         }
 
-        // FUNCIÓN MOTOR PARA MANDAR A RESEND
-        async function enviarADataResend(payload) {
-            return fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKeyResend}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: 'RecepcionPro <onboarding@resend.dev>',
-                    to: [emailDestino],
-                    subject: `🚨 NUEVA RECEPCIÓN: ${payload.matricula.toUpperCase()}`,
-                    html: `<h3>Nueva Recepción Registrada</h3><p><strong>Cliente:</strong> ${payload.nombre}</p><p><strong>Matrícula:</strong> ${payload.matricula.toUpperCase()}</p>`,
-                    attachments: [{
-                        filename: `ORDEN_${payload.matricula.toUpperCase()}.pdf`,
-                        content: payload.pdfBase64
-                    }]
-                })
-            });
-        }
-
-        // MOTOR REINTENTO AUTOMÁTICO EN SEGUNDO PLANO
-        async function intentarSincronizarPendientes() {
-            const pendientes = JSON.parse(localStorage.getItem('recepciones_pendientes') || '[]');
-            if (pendientes.length === 0) return;
-
-            document.getElementById('alerta_sincro').classList.remove('hidden');
-
-            for (let i = pendientes.length - 1; i >= 0; i--) {
-                try {
-                    const res = await enviarADataResend(pendientes[i]);
-                    if (res.ok) {
-                        pendientes.splice(i, 1); // Lo quita de la lista si sale bien
-                    }
-                } catch (e) {
-                    console.log("Sigue sin cobertura...");
-                }
-            }
-
-            localStorage.setItem('recepciones_pendientes', JSON.stringify(pendientes));
-            if (pendientes.length === 0) {
-                document.getElementById('alerta_sincro').classList.add('hidden');
-            }
-        }
-
-        // ESCUCHADOR SI ADQUIERE INTERNET EN VIVO
-        window.addEventListener('online', intentarSincronizarPendientes);
-
-        // FORMULARIO PRINCIPAL
+        // ENVÍO AL SERVIDOR SEGURO (Vercel API)
         document.getElementById('btn_enviar').addEventListener('click', async () => {
             const btn = document.getElementById('btn_enviar');
             const matricula = document.getElementById('matricula').value.trim();
             const nombre = document.getElementById('nombre').value.trim();
             const telefono = document.getElementById('telefono').value.trim();
 
-            if (!matricula || !nombre || !telefono) {
-                alert('⚠️ Matrícula, Nombre y Teléfono son obligatorios.');
-                return;
-            }
+            if (!matricula || !nombre || !telefono) { alert('⚠️ Matrícula, Nombre y Teléfono son obligatorios.'); return; }
 
-            btn.disabled = true;
-            btn.innerText = "⏳ Procesando Registro...";
+            btn.disabled = true; btn.innerText = "⏳ Guardando Registro...";
 
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFontSize(18);
-            doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
-            doc.setFontSize(10);
-            doc.text(`Matrícula: ${matricula.toUpperCase()}`, 20, 35);
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(18); doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
+            doc.setFontSize(10); doc.text(`Matrícula: ${matricula.toUpperCase()}`, 20, 35);
             doc.text(`Kilómetros: ${document.getElementById('kilometros').value || '---'} km`, 20, 42);
             doc.text(`Cliente: ${nombre} | Tel: ${telefono}`, 20, 49);
             
-            const seleccionados = [];
-            document.querySelectorAll('.opcion-check:checked').forEach(c => seleccionados.push(c.value));
+            const seleccionados = []; document.querySelectorAll('.opcion-check:checked').forEach(c => seleccionados.push(c.value));
             doc.text(`Trabajos: ${seleccionados.join(', ') || 'General'}`, 20, 58);
 
             let ejeY = 70;
-            doc.text("Reportaje Fotográfico:", 20, ejeY);
             if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY+5, 40, 30);
             if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 65, ejeY+5, 40, 30);
             if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 110, ejeY+5, 40, 30);
             if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 155, ejeY+5, 40, 30);
 
-            doc.setFontSize(7);
-            const lopd = "El cliente autoriza los trabajos y pruebas en carretera. Datos tratados según RGPD.";
-            doc.text(lopd, 20, 115);
-            const firmaImg = canvas.toDataURL('image/png');
-            doc.addImage(firmaImg, 'PNG', 20, 120, 50, 20);
+            doc.setFontSize(7); doc.text("El cliente autoriza los trabajos y pruebas en carretera. Datos tratados según RGPD.", 20, 115);
+            const firmaImg = canvas.toDataURL('image/png'); doc.addImage(firmaImg, 'PNG', 20, 120, 50, 20);
 
             const pdfBase64 = doc.output('datauristring').split(',')[1];
 
-            const datosOrden = { matricula, nombre, pdfBase64 };
-
-            // INTENTO DE ENVIÓ INTELIGENTE CON RED DE SEGURIDAD
             try {
-                const res = await enviarADataResend(datosOrden);
+                const res = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricula, nombre, telefono, trabajos: seleccionados.join(', '), pdfBase64 })
+                });
 
                 if (res.ok) {
-                    alert('✅ ¡Registro completo enviado con éxito!');
+                    alert('✅ ¡Registro guardado y correos enviados con éxito!');
                     location.reload();
                 } else {
-                    const data = await res.json();
-                    alert('❌ Error: ' + data.message);
+                    alert('❌ Error en el servidor.');
                     btn.disabled = false; btn.innerText = "Finalizar y Guardar Registro";
                 }
             } catch (e) {
-                // 🛡️ AQUÍ ACTÚA EL AIRBAG DE COBERTURA LOCAL
-                const pendientes = JSON.parse(localStorage.getItem('recepciones_pendientes') || '[]');
-                pendientes.push(datosOrden);
-                localStorage.setItem('recepciones_pendientes', JSON.stringify(pendientes));
-
-                alert('⚠️ Guardado Local: No hay buena cobertura de red. La orden se ha guardado de forma segura en la memoria del dispositivo y se enviará sola en cuanto vuelva la señal.');
-                location.reload();
+                alert('❌ Error de conexión con el servidor.');
+                btn.disabled = false; btn.innerText = "Finalizar y Guardar Registro";
             }
         });
     </script>

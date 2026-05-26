@@ -119,9 +119,14 @@
 
             <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">4. Conformidad (Firma en pantalla)</h2>
+                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">4. Conformidad y Cláusula LOPD</h2>
                     <button type="button" id="btn_limpiar" class="text-[10px] bg-gray-800 border border-gray-700 text-gray-400 py-1 px-2 rounded-lg">Borrar</button>
                 </div>
+                
+                <p class="text-[10px] text-gray-500 leading-relaxed bg-gray-950 p-2 rounded-lg border border-gray-850">
+                    Al firmar, el cliente autoriza la realización de los trabajos descritos, el movimiento del vehículo para pruebas y consiente el tratamiento de sus datos según la Ley de Protección de Datos (RGPD) para la gestión del servicio.
+                </p>
+
                 <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
                     <canvas id="canvas_firma" class="w-full h-32 bg-gray-950 block" width="350" height="128"></canvas>
                 </div>
@@ -138,14 +143,10 @@
     </div>
 
     <script>
-        // Guardar las fotos comprimidas en memoria
         const fotosAlmacenadas = {};
-
-        // LÓGICA INSTALACIÓN EN ESCRITORIO (PWA)
         let eventoInstalacion;
         const btnInstalar = document.getElementById('btn_instalar');
 
-        // Escuchar si el navegador permite la instalación nativa (Android/Chrome)
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             eventoInstalacion = e;
@@ -153,24 +154,19 @@
 
         btnInstalar.addEventListener('click', async () => {
             if (eventoInstalacion) {
-                // Ejecutar instalador nativo en Android
                 eventoInstalacion.prompt();
                 const { outcome } = await eventoInstalacion.userChoice;
-                if (outcome === 'accepted') {
-                    btnInstalar.style.display = 'none';
-                }
+                if (outcome === 'accepted') btnInstalar.style.display = 'none';
                 eventoInstalacion = null;
             } else {
-                // Guía rápida e inteligente para iPhone / Safari o si ya está instalada
-                alert('📱 Para tenerla como App:\n\n• En Android/Chrome: Ya la tienes instalada o dale a los 3 puntitos arriba y "Instalar aplicación".\n• En iPhone/Safari: Dale al botón "Compartir" abajo y selecciona "Añadir a la pantalla de inicio".');
+                alert('📱 Para tenerla como App:\n\n• En Android: Dale a los 3 puntitos arriba y "Instalar aplicación".\n• En iPhone: Dale al botón "Compartir" abajo en Safari y selecciona "Añadir a la pantalla de inicio".');
             }
         });
 
-        // 1. GESTIÓN DE LA FIRMA CON EL DEDO
+        // 1. GESTIÓN DE LA FIRMA
         const canvas = document.getElementById('canvas_firma');
         const ctx = canvas.getContext('2d');
         let trazando = false;
-
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2;
 
@@ -180,10 +176,8 @@
             const clienteY = e.touches ? e.touches[0].clientY : e.clientY;
             return { x: clienteX - rect.left, y: clienteY - rect.top };
         }
-
         function iniciarTrazo(e) { trazando = true; dejasMarca(e); }
         function finTrazo() { trazando = false; ctx.beginPath(); }
-
         function dejasMarca(e) {
             if (!trazando) return;
             const pos = obtenerPosicion(e);
@@ -192,42 +186,32 @@
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
         }
-
         canvas.addEventListener('mousedown', iniciarTrazo);
         canvas.addEventListener('mousemove', dejasMarca);
         canvas.addEventListener('mouseup', finTrazo);
         canvas.addEventListener('touchstart', iniciarTrazo);
         canvas.addEventListener('touchmove', dejasMarca);
         canvas.addEventListener('touchend', finTrazo);
-
         document.getElementById('btn_limpiar').addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
 
-        // 2. COMPRESIÓN DE FOTOS AL INSTANTE
+        // 2. PROCESAR FOTOS
         function procesarFoto(input, idLabel) {
             const archivo = input.files[0];
             if (!archivo) return;
-
             const lector = new FileReader();
             lector.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     const canvasComp = document.createElement('canvas');
                     const maxDim = 800;
-                    let ancho = img.width;
-                    let alto = img.height;
-
+                    let ancho = img.width, alto = img.height;
                     if (ancho > alto && ancho > maxDim) { alto *= maxDim / ancho; ancho = maxDim; }
                     else if (alto > maxDim) { ancho *= maxDim / alto; alto = maxDim; }
-
-                    canvasComp.width = ancho;
-                    canvasComp.height = alto;
-                    const ctxComp = canvasComp.getContext('2d');
-                    ctxComp.drawImage(img, 0, 0, ancho, alto);
-
+                    canvasComp.width = ancho; canvasComp.height = alto;
+                    canvasComp.getContext('2d').drawImage(img, 0, 0, ancho, alto);
                     fotosAlmacenadas[input.id] = canvasComp.toDataURL('image/jpeg', 0.6);
-                    
                     document.getElementById(idLabel).classList.remove('bg-gray-800', 'border-gray-700');
                     document.getElementById(idLabel).classList.add('bg-emerald-950', 'border-emerald-500', 'text-emerald-400');
                 };
@@ -236,20 +220,14 @@
             lector.readAsDataURL(archivo);
         }
 
-        // CONTROL CHECKBOX EMAIL
         document.getElementById('no_email').addEventListener('change', function() {
             const inputEmail = document.getElementById('email');
-            if(this.checked) {
-                inputEmail.value = "";
-                inputEmail.disabled = true;
-                inputEmail.classList.add('opacity-30');
-            } else {
-                inputEmail.disabled = false;
-                inputEmail.classList.remove('opacity-30');
-            }
+            inputEmail.value = "";
+            inputEmail.disabled = this.checked;
+            this.checked ? inputEmail.classList.add('opacity-30') : inputEmail.classList.remove('opacity-30');
         });
 
-        // 3. GENERACIÓN DEL PDF Y ENVÍO AUTOMÁTICO
+        // 3. GENERACIÓN DEL PDF CON TEXTO LEGAL REFORZADO
         document.getElementById('btn_enviar').addEventListener('click', async () => {
             const btn = document.getElementById('btn_enviar');
             const matricula = document.getElementById('matricula').value.trim();
@@ -270,45 +248,67 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
+            // Cabecera PDF
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(20);
+            doc.setFontSize(18);
             doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
             
             doc.setFontSize(10);
             doc.setFont("helvetica", "normal");
-            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 28);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 27);
 
-            doc.setFillColor(240, 240, 240);
-            doc.rect(20, 35, 170, 35, "F");
+            // Bloque Datos
+            doc.setFillColor(245, 247, 250);
+            doc.rect(20, 33, 170, 32, "F");
             doc.setFont("helvetica", "bold");
-            doc.text("DATOS GENERALES:", 25, 42);
+            doc.text("DATOS GENERALES:", 25, 40);
             doc.setFont("helvetica", "normal");
-            doc.text(`Matrícula: ${matricula.toUpperCase()}`, 25, 50);
-            doc.text(`Kilómetros: ${document.getElementById('kilometros').value || 'No indicados'} km`, 25, 56);
-            doc.text(`Cliente: ${nombre} | Tel: ${telefono}`, 25, 62);
+            doc.text(`Matrícula: ${matricula.toUpperCase()}`, 25, 47);
+            doc.text(`Kilómetros: ${document.getElementById('kilometros').value || 'No indicados'} km`, 25, 53);
+            doc.text(`Cliente: ${nombre} | Tel: ${telefono}`, 25, 59);
 
+            // Bloque Trabajos
             doc.setFont("helvetica", "bold");
-            doc.text("TRABAJOS SOLICITADOS:", 20, 80);
+            doc.text("TRABAJOS SOLICITADOS:", 20, 75);
             doc.setFont("helvetica", "normal");
-            doc.text(trabajos.length > 0 ? trabajos.join(', ') : 'Ninguno seleccionado', 20, 86);
-            doc.text(`Notas: ${document.getElementById('notas_trabajo').value || 'Sin notas adicionales.'}`, 20, 94);
+            doc.text(trabajos.length > 0 ? trabajos.join(', ') : 'Ninguno seleccionado', 20, 81);
+            doc.text(`Notas adicionales: ${document.getElementById('notas_trabajo').value || 'Sin notas.'}`, 20, 88);
 
-            let ejeY = 110;
+            // Fotos
+            let ejeY = 100;
             doc.setFont("helvetica", "bold");
             doc.text("REGISTRO FOTOGRÁFICO DE ESTADO VISUAL:", 20, ejeY);
-            ejeY += 6;
+            ejeY += 5;
 
-            if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY, 35, 25);
-            if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 60, ejeY, 35, 25);
-            if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 100, ejeY, 35, 25);
-            if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 140, ejeY, 35, 25);
+            if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY, 35, 24);
+            if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 60, ejeY, 35, 24);
+            if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 100, ejeY, 35, 24);
+            if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 140, ejeY, 35, 24);
             
-            ejeY += 35;
+            // =======================================================
+            // ⚖️ TEXTO LEGAL COMPLETO (LOPD / RGPD / CLÁUSULA TALLER)
+            // =======================================================
+            ejeY += 34;
             doc.setFont("helvetica", "bold");
-            doc.text("CONFORMIDAD Y RECONOCIMIENTO DE ESTADO (FIRMA):", 20, ejeY);
+            doc.setFontSize(8);
+            doc.text("CLÁUSULA DE PROTECCIÓN DE DATOS Y CONFORMIDAD LEGAL:", 20, ejeY);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7);
+            const textoLegal = "En cumplimiento del Reglamento General de Protección de Datos (RGPD) y la LOPDGDD, se informa que los datos recogidos en este documento serán tratados bajo la responsabilidad del taller mecánico prestador del servicio con la finalidad de gestionar la reparación del vehículo, elaboración de presupuestos y facturación. El cliente autoriza expresamente la realización de los trabajos descritos, así como las pruebas en carretera necesarias para la verificación de la avería y control del servicio. Asimismo, el cliente declara estar conforme con el estado visual reflejado en el reportaje fotográfico adjunto. Puede ejercer sus derechos de acceso, rectificación, supresión y portabilidad presentando su documento de identidad en las oficinas del taller.";
+            
+            // Ajustar el texto automáticamente para que no se salga de los márgenes del folio
+            const lineasTextoLegal = doc.splitTextToSize(textoLegal, 170);
+            doc.text(lineasTextoLegal, 20, ejeY + 4);
+
+            // Sección de la firma
+            ejeY += 24;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.text("FIRMA DE CONFORMIDAD DEL CLIENTE:", 20, ejeY);
             
             const imgFirma = canvas.toDataURL('image/png');
-            doc.addImage(imgFirma, 'PNG', 20, ejeY + 4, 50, 20);
+            doc.addImage(imgFirma, 'PNG', 20, ejeY + 3, 45, 18);
 
             const pdfBase64 = doc.output('datauristring').split(',')[1];
 
@@ -323,25 +323,22 @@
                         telefono,
                         email: document.getElementById('email').value,
                         trabajos: trabajos.join(', '),
-                        notes: document.getElementById('notas_trabajo').value,
+                        notas: document.getElementById('notas_trabajo').value,
                         pdfBase64
                     })
                 });
 
                 const resultado = await respuesta.json();
-
                 if (resultado.success) {
-                    alert('✅ ¡Orden guardada y correos enviados correctamente!');
+                    alert('✅ ¡Registro guardado, texto legal firmado y correos enviados!');
                     location.reload();
                 } else {
-                    alert('❌ Error al enviar correos: ' + resultado.error);
-                    btn.disabled = false;
-                    btn.innerText = "Finalizar y Guardar Registro";
+                    alert('❌ Error: ' + resultado.error);
+                    btn.disabled = false; btn.innerText = "Finalizar y Guardar Registro";
                 }
             } catch (err) {
-                alert('❌ Error de conexión con el servidor.');
-                btn.disabled = false;
-                btn.innerText = "Finalizar y Guardar Registro";
+                alert('❌ Error de conexión.');
+                btn.disabled = false; btn.innerText = "Finalizar y Guardar Registro";
             }
         });
     </script>

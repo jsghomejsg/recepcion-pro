@@ -21,7 +21,7 @@
     <div class="max-w-md mx-auto p-4 min-h-screen flex flex-col justify-between">
         
         <header class="p-3 text-center flex flex-col items-center">
-            <h1 class="text-2xl font-extrabold text-white tracking-tight">RECEPCIÓN PREMIUM</h1>
+            <h1 id="nombre_taller_pantalla" class="text-2xl font-extrabold text-white tracking-tight uppercase">RECEPCIÓN PREMIUM</h1>
             <div class="inline-flex items-center bg-emerald-950 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-wider border border-emerald-900">
                 Recepción Digital de Vehículos
             </div>
@@ -135,6 +135,20 @@
     </div>
 
     <script>
+        // DETECTAR EL TALLER DESDE EL ENLACE URL (?taller=pepe)
+        const parametrosURL = new URLSearchParams(window.location.search);
+        const idTallerActual = parametrosURL.get('taller') || 'demo';
+
+        // Nombres estéticos provisionales para la pantalla del comercial
+        const nombresTalleres = {
+            'demo': 'RECEPCIÓN PREMIUM',
+            'pepe': 'TALLERES PEPE',
+            'cordoba': 'AUTOMOCIÓN CÓRDOBA'
+        };
+        if (nombresTalleres[idTallerActual]) {
+            document.getElementById('nombre_taller_pantalla').innerText = nombresTalleres[idTallerActual];
+        }
+
         const fotosAlmacenadas = {};
         let eventoInstalacion;
 
@@ -144,10 +158,9 @@
             else { alert('📱 Guarda la App:\n• En Android/PC: Tres puntos -> "Instalar".\n• En iPhone: Compartir -> "Añadir a pantalla de inicio".'); }
         });
 
-        // RECUADRO DE FIRMA MÓVIL Y PC
         const canvas = document.getElementById('canvas_firma');
         const ctx = canvas.getContext('2d');
-        let trazando = false; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3; // Color azul eléctrico para pintar mejor en el móvil
+        let trazando = false; ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 3;
         function obtenerPosicion(e) { const r = canvas.getBoundingClientRect(); const cX = e.touches ? e.touches[0].clientX : e.clientX; const cY = e.touches ? e.touches[0].clientY : e.clientY; return { x: cX - r.left, y: cY - r.top }; }
         canvas.addEventListener('mousedown', (e) => { trazando = true; ctx.beginPath(); const p = obtenerPosicion(e); ctx.moveTo(p.x, p.y); });
         canvas.addEventListener('mousemove', (e) => { if(!trazando) return; const p = obtenerPosicion(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
@@ -205,13 +218,12 @@
 
             doc.setFontSize(7); doc.text("El cliente autoriza los trabajos y pruebas en carretera. Datos tratados según RGPD.", 20, 115);
             
-            // TRUCO DE COLOR: Crear un canvas temporal para pasar la firma a color azul oscuro/negro para el PDF
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
             const tCtx = tempCanvas.getContext('2d');
             tCtx.drawImage(canvas, 0, 0);
             tCtx.globalCompositeOperation = 'source-in';
-            tCtx.fillStyle = '#1e3a8a'; // Azul marino muy oscuro
+            tCtx.fillStyle = '#1e3a8a';
             tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             
             const firmaImg = tempCanvas.toDataURL('image/png'); 
@@ -229,15 +241,17 @@
                         telefono, 
                         emailCliente: noEmail ? "" : emailCliente, 
                         trabajos: seleccionados.join(', '), 
-                        pdfBase64 
+                        pdfBase64,
+                        idTaller: idTallerActual // Enviamos el identificador del taller al servidor
                     })
                 });
 
                 if (res.ok) {
-                    alert('✅ ¡Registro guardado y correos enviados con éxito!');
+                    alert('✅ ¡Registro procesado con éxito!');
                     location.reload();
                 } else {
-                    alert('❌ Error en el servidor.');
+                    const errTxt = await res.json();
+                    alert('❌ ' + (errTxt.error || 'Error en el servidor.'));
                     btn.disabled = false; btn.innerText = "Finalizar y Guardar Registro";
                 }
             } catch (e) {

@@ -1,4 +1,7 @@
+import nodemailer from 'nodemailer';
+
 export default async function handler(req, res) {
+    // Configuración de cabeceras CORS para evitar bloqueos entre la web y el servidor
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -26,45 +29,53 @@ export default async function handler(req, res) {
             return res.status(403).json({ success: false, error: "Licencia no activa." });
         }
 
+        // Si el cliente no tiene email, usamos el tuyo por defecto para que te quede una copia de seguridad
         const correoDestino = (emailCliente && emailCliente.trim() !== "") ? emailCliente.trim() : "jsghomejsg@gmail.com";
 
-        // Estructura limpia para inyectar el PDF adjunto de forma rápida
-        const contenidoPlano = `From: "Resguardo ${taller.nombre}" <noreply.recepcionpro@gmail.com>\r\n` +
-            `To: ${correoDestino}\r\n` +
-            `Subject: Resguardo de Recepcion - ${taller.nombre} (${matricula.toUpperCase()})\r\n` +
-            `MIME-Version: 1.0\r\n` +
-            `Content-Type: multipart/mixed; boundary="separador_pdf"\r\n\r\n` +
-            `--separador_pdf\r\n` +
-            `Content-Type: text/html; charset="UTF-8"\r\n\r\n` +
-            `<h2>${taller.nombre}</h2>` +
-            `<p>Estimado/a cliente, le adjuntamos el resguardo de depósito de su vehículo.</p>` +
-            `<p><strong>Matrícula:</strong> ${matricula.toUpperCase()}</p>` +
-            `<p><strong>Cliente:</strong> ${nombre}</p>` +
-            `<p><strong>Trabajos:</strong> ${trabajos || 'Revisión General'}</p>\r\n\r\n` +
-            `--separador_pdf\r\n` +
-            `Content-Type: application/pdf\r\n` +
-            `Content-Disposition: attachment; filename="RECEPCION_${matricula.toUpperCase()}.pdf"\r\n` +
-            `Content-Transfer-Encoding: base64\r\n\r\n` +
-            `${pdfBase64}\r\n` +
-            `--separador_pdf--`;
-
-        // Codificamos el mensaje en base64 seguro para la API de Google
-        const mensajeSeguro = Buffer.from(contenidoPlano).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-        // Intentamos el envío directo y veloz
-        const respuestaGoogle = await fetch('https://gmail.googleapis.com/v1/users/me/messages/send', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer fhihqoebcalsrqfr`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ raw: mensajeSeguro })
+        // CONFIGURACIÓN DEL MOTOR DE GMAIL CON TU LLAVE MAESTRA
+        const transcriptor = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true, // true para puerto 465 (SSL) que es el más rápido y seguro en Vercel
+            auth: {
+                user: 'noreply.recepcionpro@gmail.com',
+                pass: 'fhihqoebcalsrqfr' // Tu clave de 16 letras sin espacios
+            }
         });
 
-        // Si la velocidad falla, usamos el plan B instantáneo que siempre responde OK a la web
+        const opcionesCorreo = {
+            from: `"Resguardo ${taller.nombre}" <noreply.recepcionpro@gmail.com>`,
+            to: correoDestino,
+            subject: `📄 Resguardo de Recepción - ${taller.nombre} (${matricula.toUpperCase()})`,
+            html: `
+                <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                    <h2 style="color: #1e3a8a;">${taller.nombre}</h2>
+                    <p>Estimado/a cliente, le adjuntamos el resguardo oficial de depósito de su vehículo en nuestras instalaciones.</p>
+                    <hr style="border: none; border-top: 1px solid #eee;" />
+                    <p><strong>🚗 Matrícula:</strong> ${matricula.toUpperCase()}</p>
+                    <p><strong>👤 Cliente:</strong> ${nombre}</p>
+                    <p><strong>📞 Teléfono:</strong> ${telefono}</p>
+                    <p><strong>🛠️ Trabajos encargados:</strong> ${trabajos || 'General'}</p>
+                    <hr style="border: none; border-top: 1px solid #eee;" />
+                    <p style="font-size: 11px; color: #777;">Este es un correo automático. Por favor, no responda a este mensaje.</p>
+                </div>
+            `,
+            attachments: [
+                {
+                    filename: `RECEPCION_${matricula.toUpperCase()}.pdf`,
+                    content: pdfBase64,
+                    encoding: 'base64'
+                }
+            ]
+        };
+
+        // ENVIAR EL CORREO
+        await transcriptor.sendMail(opcionesCorreo);
+        
         return res.status(200).json({ success: true });
 
     } catch (error) {
-        return res.status(200).json({ success: true }); // Forzamos el éxito para que la web guarde la firma del cliente
+        // Si hay un error real de Gmail, se lo escupimos a la pantalla para saber qué pasa
+        return res.status(500).json({ success: false, error: "Error en el motor de correo: " + error.message });
     }
 }

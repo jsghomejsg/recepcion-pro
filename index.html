@@ -120,7 +120,7 @@
                 <div class="bg-gray-950 p-3 rounded-xl border border-gray-850 h-24 overflow-y-auto text-[10px] text-gray-400 space-y-2 scrollbar-thin scrollbar-thumb-gray-800">
                     <p class="font-bold text-gray-300 uppercase text-[9px]">Documento de Depósito y Autorización de Trabajos</p>
                     <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
-                    <p>El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, **autoriza expresamente la realización de pruebas en carretera** por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.</p>
+                    <p>El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.</p>
                 </div>
 
                 <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
@@ -210,21 +210,54 @@
             btn.disabled = true; btn.innerText = "⏳ Guardando Registro...";
 
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.setFontSize(18); doc.text("RECEPCIÓN DIGITAL DE VEHÍCULOS", 20, 20);
-            doc.setFontSize(10); doc.text(`Matrícula: ${matricula.toUpperCase()}`, 20, 35);
-            doc.text(`Kilómetros: ${document.getElementById('kilometros').value || '---'} km`, 20, 42);
-            doc.text(`Cliente: ${nombre} | Tel: ${telefono}`, 20, 49);
+            
+            // CABECERA DEL DOCUMENTO OBLIGATORIO
+            doc.setFontSize(18); doc.text("RESGUARDO DE RECEPCIÓN DIGITAL", 20, 20);
+            doc.setFontSize(11); doc.text(`Taller: ${nombresTalleres[idTallerActual] || 'RECEPCIÓN PREMIUM'}`, 20, 30);
+            
+            // DATOS DE CONTROL
+            doc.setFontSize(10); 
+            doc.text(`Matrícula: ${matricula.toUpperCase()}`, 20, 42);
+            doc.text(`Kilómetros: ${document.getElementById('kilometros').value || '---'} km`, 20, 49);
+            doc.text(`Cliente: ${nombre}`, 20, 56);
+            doc.text(`Teléfono: ${telefono}`, 20, 63);
             
             const seleccionados = []; document.querySelectorAll('.opcion-check:checked').forEach(c => seleccionados.push(c.value));
-            doc.text(`Trabajos: ${seleccionados.join(', ') || 'General'}`, 20, 58);
+            doc.text(`Trabajos encargados: ${seleccionados.join(', ') || 'General'}`, 20, 72);
+            if(document.getElementById('notas_trabajo').value.trim() !== "") {
+                doc.text(`Notas adicionales: ${document.getElementById('notas_trabajo').value.trim()}`, 20, 79);
+            }
 
-            let ejeY = 70;
-            if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeY+5, 40, 30);
-            if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 65, ejeY+5, 40, 30);
-            if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 110, ejeY+5, 40, 30);
-            if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 155, ejeY+5, 40, 30);
+            // FOTOS (Zona central)
+            let ejeYFotos = 90;
+            if (fotosAlmacenadas['foto1']) doc.addImage(fotosAlmacenadas['foto1'], 'JPEG', 20, ejeYFotos, 38, 28);
+            if (fotosAlmacenadas['foto2']) doc.addImage(fotosAlmacenadas['foto2'], 'JPEG', 62, ejeYFotos, 38, 28);
+            if (fotosAlmacenadas['foto3']) doc.addImage(fotosAlmacenadas['foto3'], 'JPEG', 104, ejeYFotos, 38, 28);
+            if (fotosAlmacenadas['foto4']) doc.addImage(fotosAlmacenadas['foto4'], 'JPEG', 146, ejeYFotos, 38, 28);
 
-            doc.setFontSize(7); doc.text("El cliente autoriza los trabajos y pruebas en carretera. Datos tratados según RGPD.", 20, 115);
+            // 📄 TEXTO LEGAL CORREGIDO Y MARGINADO (Zona inferior)
+            let ejeYLegal = 135;
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.text("DOCUMENTO DE DEPÓSITO Y AUTORIZACIÓN DE TRABAJOS (RGPD)", 20, ejeYLegal);
+            
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(7.5);
+            const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
+            const parrafo2 = "El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.";
+            
+            // Dividimos el texto para que se ajuste automáticamente al ancho de la página sin cortarse
+            const lineasP1 = doc.splitTextToSize(parrafo1, 170);
+            doc.text(lineasP1, 20, ejeYLegal + 5);
+            
+            const lineasP2 = doc.splitTextToSize(parrafo2, 170);
+            doc.text(lineasP2, 20, ejeYLegal + 18);
+            
+            // FIRMA DIGITAL (Abajo del todo)
+            let ejeYFirma = 175;
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text("Firma del Cliente:", 20, ejeYFirma);
             
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width; tempCanvas.height = canvas.height;
@@ -235,7 +268,7 @@
             tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             
             const firmaImg = tempCanvas.toDataURL('image/png'); 
-            doc.addImage(firmaImg, 'PNG', 20, 120, 50, 20);
+            doc.addImage(firmaImg, 'PNG', 20, ejeYFirma + 3, 55, 22);
 
             const pdfBase64 = doc.output('datauristring').split(',')[1];
 
@@ -255,7 +288,7 @@
                 });
 
                 if (res.ok) {
-                    alert('✅ ¡Registro procesado con éxito!');
+                    alert('✅ ¡Registro procesado con éxito y correos enviados!');
                     location.reload();
                 } else {
                     const errTxt = await res.json();

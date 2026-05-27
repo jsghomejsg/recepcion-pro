@@ -28,8 +28,8 @@ export default async function handler(req, res) {
             return res.status(403).json({ success: false, error: "Licencia no activa." });
         }
 
-        // Si el cliente no tiene correo, el destino principal será tu cuenta de correo
-        const correoDestino = (emailCliente && emailCliente.trim() !== "") ? emailCliente.trim() : "jsghomejsg@gmail.com";
+        // Evitamos el bucle de Gmail: si no hay email, va al remitente de la app, rompiendo el bloqueo técnico
+        const correoDestino = (emailCliente && emailCliente.trim() !== "") ? emailCliente.trim() : "noreply.recepcionpro@gmail.com";
 
         const transcriptor = nodemailer.createTransport({
             host: "smtp.gmail.com",
@@ -44,7 +44,7 @@ export default async function handler(req, res) {
         const opcionesCorreo = {
             from: `"Resguardo ${taller.nombre}" <noreply.recepcionpro@gmail.com>`,
             to: correoDestino,
-            bcc: "jsghomejsg@gmail.com", // 👁️ TU COPIA OCULTA: Te llegará SIEMPRE a ti también
+            bcc: "jsghomejsg@gmail.com", // 👁️ Te llegará SIEMPRE aquí sin bloquearse
             subject: `📄 Resguardo de Recepción - ${taller.nombre} (${matricula.toUpperCase()})`,
             html: `
                 <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
                     <p><strong>📞 Teléfono:</strong> ${telefono}</p>
                     <p><strong>🛠️ Trabajos encargados:</strong> ${trabajos || 'General'}</p>
                     <hr style="border: none; border-top: 1px solid #eee;" />
-                    <p style="font-size: 11px; color: #777;">Este es un correo automático. Por favor, no responda a este mensaje.</p>
+                    <p style="font-size: 11px; color: #777;">Este es un correo automático de copia para el taller.</p>
                 </div>
             `,
             attachments: [

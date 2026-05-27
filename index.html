@@ -112,13 +112,17 @@
             </div>
 
             <div class="bg-gray-900 p-5 rounded-2xl shadow-2xl border border-gray-800 space-y-4">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">4. Cláusula LOPD y Firma</h2>
-                    <button type="button" id="btn_limpiar" class="text-[10px] bg-gray-800 border border-gray-700 text-gray-400 py-1 px-2 rounded-lg">Borrar</button>
+                <div class="flex justify-between items-center mb-1">
+                    <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">4. Términos Legales y Firma</h2>
+                    <button type="button" id="btn_limpiar" class="text-[10px] bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 py-1 px-2.5 rounded-lg font-medium transition">Borrar Firma</button>
                 </div>
-                <p class="text-[9px] text-gray-500 leading-relaxed bg-gray-950 p-2 rounded-lg border border-gray-850">
-                    En cumplimiento del RGPD, sus datos se tratarán para gestionar la reparación y facturación. El cliente autoriza expresamente las pruebas en carretera necesarias para la verificación de averías.
-                </p>
+                
+                <div class="bg-gray-950 p-3 rounded-xl border border-gray-850 h-24 overflow-y-auto text-[10px] text-gray-400 space-y-2 scrollbar-thin scrollbar-thumb-gray-800">
+                    <p class="font-bold text-gray-300 uppercase text-[9px]">Documento de Depósito y Autorización de Trabajos</p>
+                    <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
+                    <p>El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, **autoriza expresamente la realización de pruebas en carretera** por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.</p>
+                </div>
+
                 <div class="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden">
                     <canvas id="canvas_firma" class="w-full h-32 bg-gray-950 block" width="350" height="128"></canvas>
                 </div>
@@ -195,7 +199,6 @@
             const emailCliente = document.getElementById('email').value.trim();
             const noEmail = document.getElementById('no_email').checked;
 
-            // 🛑 EL CANDADO DE SEGURIDAD OBLIGATORIO: Email o Checkbox obligatorio
             if (!noEmail && (!emailCliente || emailCliente === "")) {
                 alert("❌ Error: Debe introducir el correo electrónico del cliente o, en su defecto, marcar la casilla 'No tiene email'.");
                 document.getElementById('email').focus();

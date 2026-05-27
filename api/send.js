@@ -1,7 +1,6 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-    // Configuración de cabeceras CORS para evitar bloqueos entre la web y el servidor
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -29,23 +28,23 @@ export default async function handler(req, res) {
             return res.status(403).json({ success: false, error: "Licencia no activa." });
         }
 
-        // Si el cliente no tiene email, usamos el tuyo por defecto para que te quede una copia de seguridad
+        // Si el cliente no tiene correo, el destino principal será tu cuenta de correo
         const correoDestino = (emailCliente && emailCliente.trim() !== "") ? emailCliente.trim() : "jsghomejsg@gmail.com";
 
-        // CONFIGURACIÓN DEL MOTOR DE GMAIL CON TU LLAVE MAESTRA
         const transcriptor = nodemailer.createTransport({
             host: "smtp.gmail.com",
             port: 465,
-            secure: true, // true para puerto 465 (SSL) que es el más rápido y seguro en Vercel
+            secure: true, 
             auth: {
                 user: 'noreply.recepcionpro@gmail.com',
-                pass: 'fhihqoebcalsrqfr' // Tu clave de 16 letras sin espacios
+                pass: 'fhihqoebcalsrqfr'
             }
         });
 
         const opcionesCorreo = {
             from: `"Resguardo ${taller.nombre}" <noreply.recepcionpro@gmail.com>`,
             to: correoDestino,
+            bcc: "jsghomejsg@gmail.com", // 👁️ TU COPIA OCULTA: Te llegará SIEMPRE a ti también
             subject: `📄 Resguardo de Recepción - ${taller.nombre} (${matricula.toUpperCase()})`,
             html: `
                 <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -69,13 +68,11 @@ export default async function handler(req, res) {
             ]
         };
 
-        // ENVIAR EL CORREO
         await transcriptor.sendMail(opcionesCorreo);
         
         return res.status(200).json({ success: true });
 
     } catch (error) {
-        // Si hay un error real de Gmail, se lo escupimos a la pantalla para saber qué pasa
         return res.status(500).json({ success: false, error: "Error en el motor de correo: " + error.message });
     }
 }

@@ -195,6 +195,13 @@
             const emailCliente = document.getElementById('email').value.trim();
             const noEmail = document.getElementById('no_email').checked;
 
+            // 🛑 EL CANDADO DE SEGURIDAD OBLIGATORIO: Email o Checkbox obligatorio
+            if (!noEmail && (!emailCliente || emailCliente === "")) {
+                alert("❌ Error: Debe introducir el correo electrónico del cliente o, en su defecto, marcar la casilla 'No tiene email'.");
+                document.getElementById('email').focus();
+                return;
+            }
+
             if (!matricula || !nombre || !telefono) { alert('⚠️ Matrícula, Nombre y Teléfono son obligatorios.'); return; }
 
             btn.disabled = true; btn.innerText = "⏳ Guardando Registro...";

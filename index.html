@@ -119,7 +119,7 @@
                 
                 <div class="bg-gray-950 p-3 rounded-xl border border-gray-850 h-24 overflow-y-auto text-[10px] text-gray-400 space-y-2 scrollbar-thin scrollbar-thumb-gray-800">
                     <p class="font-bold text-gray-300 uppercase text-[9px]">Documento de Depósito y Autorización de Trabajos</p>
-                    <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidente con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
+                    <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
                     <p>El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.</p>
                 </div>
 
@@ -151,7 +151,7 @@
             document.getElementById('nombre_taller_pantalla').innerText = nombresTalleres[idTallerActual];
         }
 
-        const fotosAlmacenadas = {};
+        let fotosAlmacenadas = {};
         let eventoInstalacion;
 
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); eventoInstalacion = e; });
@@ -246,7 +246,6 @@
             const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
             const parrafo2 = "El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.";
             
-            // Dividimos el texto para que se ajuste automáticamente al ancho de la página sin cortarse
             const lineasP1 = doc.splitTextToSize(parrafo1, 170);
             doc.text(lineasP1, 20, ejeYLegal + 5);
             
@@ -288,20 +287,47 @@
                 });
 
                 if (res.ok) {
-                    // Descargamos el archivo PDF real de inmediato en el móvil del mecánico
+                    // Descargamos el archivo PDF de inmediato
                     doc.save(`RECEPCION_${matricula.toUpperCase()}.pdf`);
                     
-                    alert('✅ ¡Registro guardado y PDF descargado!\n\nAhora se abrirá WhatsApp. Selecciona el clip de Adjuntar -> Documento y envía el archivo que se acaba de descargar.');
+                    alert('✅ ¡Registro guardado y PDF descargado!\n\nAl aceptar se abrirá WhatsApp. Envía el mensaje y adjunta el archivo de tus descargas.');
                     
-                    // Limpiamos el teléfono quitando espacios y metiendo el 34 de España delante
+                    // Limpiamos el teléfono para la URL
                     const telefonoLimpio = "34" + telefono.replace(/\s+/g, '');
-                    
-                    // Frase limpia acordada para WhatsApp
                     const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}.`;
-                    
                     const textoCodificado = encodeURIComponent(textoMensaje);
                     
-                    // Saltamos directamente al chat de WhatsApp del cliente
+                    // 🧼 LIMPIEZA AUTOMÁTICA COMPLETA DE LA APP ANTES DE IRSE
+                    document.getElementById('matricula').value = "";
+                    document.getElementById('kilometros').value = "";
+                    document.getElementById('nombre').value = "";
+                    document.getElementById('telefono').value = "";
+                    document.getElementById('email').value = "";
+                    document.getElementById('notas_trabajo').value = "";
+                    document.getElementById('no_email').checked = false;
+                    document.getElementById('email').disabled = false;
+                    document.getElementById('email').style.opacity = "1";
+                    
+                    // Desmarcar todos los trabajos y restaurar sus estilos oscuros
+                    document.querySelectorAll('.opcion-check').forEach(c => c.checked = false);
+                    
+                    // Resetear los cuadros de las fotos a su estado inicial gris
+                    ['lbl_foto1', 'lbl_foto2', 'lbl_foto3', 'lbl_foto4'].forEach(id => {
+                        const lbl = document.getElementById(id);
+                        lbl.classList.remove('bg-emerald-950', 'text-emerald-400', 'border-emerald-500');
+                        lbl.classList.add('bg-gray-800', 'border-gray-700');
+                    });
+                    document.querySelectorAll('input[type="file"]').forEach(f => f.value = "");
+                    fotosAlmacenadas = {}; // Vaciamos el objeto de las imágenes
+                    
+                    // Borrar el lienzo de la firma por completo
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Restauramos el botón principal
+                    btn.disabled = false;
+                    btn.innerText = "Finalizar y Guardar Registro";
+                    
+                    // Lanzamos la redirección a WhatsApp con todo ya limpio detrás
                     window.location.href = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${textoCodificado}`;
                 } else {
                     const errTxt = await res.json();

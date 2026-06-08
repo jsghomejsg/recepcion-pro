@@ -288,8 +288,21 @@
                 });
 
                 if (res.ok) {
-                    alert('✅ ¡Registro procesado con éxito y correos enviados!');
-                    location.reload();
+    alert('✅ ¡Registro procesado con éxito en el servidor!');
+    
+    // 1. Limpiamos el teléfono quitando espacios y metiendo el 34 de España delante
+    const telefonoLimpio = "34" + telefono.replace(/\s+/g, '');
+    
+    // 2. Preparamos el mensaje de texto con la matrícula y tu enlace del PDF
+    // (Como el PDF ya se genera dinámicamente en tu backend, le pasamos la matrícula como ID)
+    const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}. Puede verlo en este enlace: https://${window.location.hostname}/ver-resguardo?id=${matricula.toUpperCase()}`;
+    
+    // 3. Convertimos el texto a formato de enlace web
+    const textoCodificado = encodeURIComponent(textoMensaje);
+    
+    // 4. Redirigimos el móvil automáticamente al chat de WhatsApp del cliente
+    window.location.href = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${textoCodificado}`;
+
                 } else {
                     const errTxt = await res.json();
                     alert('❌ ' + (errTxt.error || 'Error en el servidor.'));

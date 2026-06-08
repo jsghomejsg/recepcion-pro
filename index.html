@@ -243,7 +243,7 @@
             
             doc.setFont(undefined, 'normal');
             doc.setFontSize(7.5);
-            const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
+            const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados in este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
             const parrafo2 = "El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.";
             
             // Dividimos el texto para que se ajuste automáticamente al ancho de la página sin cortarse
@@ -288,21 +288,19 @@
                 });
 
                 if (res.ok) {
-    alert('✅ ¡Registro procesado con éxito en el servidor!');
-    
-    // 1. Limpiamos el teléfono quitando espacios y metiendo el 34 de España delante
-    const telefonoLimpio = "34" + telefono.replace(/\s+/g, '');
-    
-    // 2. Preparamos el mensaje de texto con la matrícula y tu enlace del PDF
-    // (Como el PDF ya se genera dinámicamente en tu backend, le pasamos la matrícula como ID)
-    const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}. Puede verlo en este enlace: https://${window.location.hostname}/ver-resguardo?id=${matricula.toUpperCase()}`;
-    
-    // 3. Convertimos el texto a formato de enlace web
-    const textoCodificado = encodeURIComponent(textoMensaje);
-    
-    // 4. Redirigimos el móvil automáticamente al chat de WhatsApp del cliente
-    window.location.href = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${textoCodificado}`;
-
+                    alert('✅ ¡Registro procesado con éxito en el servidor!');
+                    
+                    // Limpiamos el teléfono quitando espacios y metiendo el 34 de España delante
+                    const telefonoLimpio = "34" + telefono.replace(/\s+/g, '');
+                    
+                    // Construimos el mensaje de texto exacto acordado con la matrícula y el enlace
+                    const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}. Puede verlo en este enlace: https://${window.location.hostname}/ver-resguardo?id=${matricula.toUpperCase()}`;
+                    
+                    // Codificamos el mensaje para que la URL sea válida
+                    const textoCodificado = encodeURIComponent(textoMensaje);
+                    
+                    // Abrimos directamente el chat de WhatsApp del cliente con el texto listo para dar un clic y enviar
+                    window.location.href = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${textoCodificado}`;
                 } else {
                     const errTxt = await res.json();
                     alert('❌ ' + (errTxt.error || 'Error en el servidor.'));

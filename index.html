@@ -119,7 +119,7 @@
                 
                 <div class="bg-gray-950 p-3 rounded-xl border border-gray-850 h-24 overflow-y-auto text-[10px] text-gray-400 space-y-2 scrollbar-thin scrollbar-thumb-gray-800">
                     <p class="font-bold text-gray-300 uppercase text-[9px]">Documento de Depósito y Autorización de Trabajos</p>
-                    <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
+                    <p>En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidente con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.</p>
                     <p>El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.</p>
                 </div>
 
@@ -243,7 +243,7 @@
             
             doc.setFont(undefined, 'normal');
             doc.setFontSize(7.5);
-            const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados in este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
+            const parrafo1 = "En cumplimiento del Reglamento General de Protección de Datos (RGPD), le informamos que los datos recabados en este documento serán tratados de forma confidencial con la finalidad exclusiva de gestionar la orden de reparación, mantenimiento y facturación de su vehículo.";
             const parrafo2 = "El cliente firmante declara ser el propietario del vehículo o estar plenamente autorizado para solicitar la intervención técnica. Asimismo, autoriza expresamente la realización de pruebas en carretera por parte del personal del taller que resulten estrictamente necesarias para la detección, diagnosis o comprobación de las averías reportadas.";
             
             // Dividimos el texto para que se ajuste automáticamente al ancho de la página sin cortarse
@@ -288,18 +288,20 @@
                 });
 
                 if (res.ok) {
-                    alert('✅ ¡Registro procesado con éxito en el servidor!');
+                    // Descargamos el archivo PDF real de inmediato en el móvil del mecánico
+                    doc.save(`RECEPCION_${matricula.toUpperCase()}.pdf`);
+                    
+                    alert('✅ ¡Registro guardado y PDF descargado!\n\nAhora se abrirá WhatsApp. Selecciona el clip de Adjuntar -> Documento y envía el archivo que se acaba de descargar.');
                     
                     // Limpiamos el teléfono quitando espacios y metiendo el 34 de España delante
                     const telefonoLimpio = "34" + telefono.replace(/\s+/g, '');
                     
-                    // Construimos el mensaje de texto exacto acordado con la matrícula y el enlace
-                    const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}. Puede verlo en este enlace: https://${window.location.hostname}/ver-resguardo?id=${matricula.toUpperCase()}`;
+                    // Frase limpia acordada para WhatsApp
+                    const textoMensaje = `¡Hola! Le adjunto el resguardo digital de la recepción de su vehículo con matrícula ${matricula.toUpperCase()}.`;
                     
-                    // Codificamos el mensaje para que la URL sea válida
                     const textoCodificado = encodeURIComponent(textoMensaje);
                     
-                    // Abrimos directamente el chat de WhatsApp del cliente con el texto listo para dar un clic y enviar
+                    // Saltamos directamente al chat de WhatsApp del cliente
                     window.location.href = `https://api.whatsapp.com/send?phone=${telefonoLimpio}&text=${textoCodificado}`;
                 } else {
                     const errTxt = await res.json();
